@@ -1,13 +1,9 @@
 package com.example.simplecalc;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.annotation.SuppressLint;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.InputType;
-import android.text.SpannableStringBuilder;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -38,9 +34,12 @@ public class MainActivity extends AppCompatActivity {
     private Button clear;
 
     String value="";
-    String op ="";
-    String oldValue;
-    String newValue;
+    String op ="=";
+    String oldValue="0.0";
+    String newValue="0.0";
+    int compteur= 0;
+    double resu = 0.0;
+    Double lastValue =0.0;
 
 
 
@@ -259,13 +258,14 @@ public class MainActivity extends AppCompatActivity {
 
     private View.OnClickListener clearListener = new View.OnClickListener() {
 
-
-
         @Override
         public void onClick(View v) {
             String val = "";
             value="";
             display.setText(val);
+            resu =0.0;
+            compteur=0;
+            op="=";
         }
     };
 
@@ -278,55 +278,111 @@ public class MainActivity extends AppCompatActivity {
         switch(v.getId()){
             case R.id.addBTN:
                 op ="+";
+                compteur=0;
                 break;
             case R.id.substractBTN:
                 op ="-";
+                compteur=0;
                 break;
             case R.id.multiplyBTN:
                 op ="*";
+                compteur=0;
                 break;
             case R.id.divideBTN:
                 op ="/";
+                compteur=0;
                 break;
         }
         value("");
     }
 
+
+
     private View.OnClickListener equalsListener = new View.OnClickListener() {
 
         @Override
         public void onClick(View v) {
-            newValue = display.getText().toString();
 
-            double resu = 0.0;
-            switch (op){
-                case "+":
-                    resu = Double.parseDouble(oldValue) + Double.parseDouble(newValue);
-                    display.setText(resu+"");
-                    break;
-                case "-":
-                    resu = Double.parseDouble(oldValue) - Double.parseDouble(newValue);
-                    display.setText(resu+"");
-                    break;
-                case "*":
-                resu = Double.parseDouble(oldValue) * Double.parseDouble(newValue);
-                display.setText(resu+"");
-                break;
-                case "/":
-                    if(Double.parseDouble(newValue) == 0.0) {
-                        String message = "Impossible de diviser par 0";
-                        Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
-                        value("");
-                        display.setText("");
+            /**Initialisation de newValue et oldValue à 0.0 si display == chaine vide
+             * Dans le cas contraire oldValue garde la valeur du premier nombre saisie avant de cliquer sur l'opération
+             * Et newValue recupère la valeur saisie dans le display
+             */
+            newValue = display.getText().toString();
+            if(newValue.equals("")){
+                newValue ="0.0";
+            }
+
+            if(oldValue.equals("")){
+                oldValue ="0.0";
+            }
+
+            // Premiere operation on clique sur equals pour la premiere pas et/ou de façon successive
+            if (compteur == 0) {
+                switch (op) {
+                    case "+":
+                        resu = Double.parseDouble(oldValue) + Double.parseDouble(newValue);
+                        display.setText(resu + "");
+                        lastValue = Double.parseDouble(newValue);
                         break;
-                    }
-                    else{
-                        resu = Double.parseDouble(oldValue) / Double.parseDouble(newValue);
+                    case "-":
+                        resu = Double.parseDouble(oldValue) - Double.parseDouble(newValue);
+                        display.setText(resu + "");
+                        lastValue = Double.parseDouble(newValue);
+                        break;
+                    case "*":
+                        resu = Double.parseDouble(oldValue) * Double.parseDouble(newValue);
+                        display.setText(resu + "");
+                        lastValue = Double.parseDouble(newValue);
+                        break;
+                    case "/":
+                        if (Double.parseDouble(newValue) == 0.0) {
+                            String message = "Impossible de diviser par 0";
+                            Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
+                            value("");
+                            op="=";
+                            resu=0.0;
+                            display.setText("");
+                            break;
+                        } else {
+                            resu = Double.parseDouble(oldValue) / Double.parseDouble(newValue);
+                            display.setText(resu + "");
+                            lastValue = Double.parseDouble(newValue);
+                            break;
+                        }
+                    case "=":
+                        display.setText(resu + "");
+                        break;
+
+                }
+
+            }
+
+            // On click 2 fois de suite ou plus sur equals on addition le resultat avec la derniere valeur saisie
+            if(compteur >= 1 ){
+                Toast.makeText(MainActivity.this, "je suis dans le compteur n° "+compteur, Toast.LENGTH_LONG).show();
+                switch (op){
+                    case "+":
+                        resu = Double.parseDouble(newValue) + lastValue;
                         display.setText(resu+"");
                         break;
-                    }
+                    case "-":
+                        resu = Double.parseDouble(newValue) - lastValue;
+                        display.setText(resu+"");
+                        break;
+                    case "*":
+                        resu = Double.parseDouble(newValue) * lastValue;
+                        display.setText(resu+"");
+                        break;
+                    case "/":
+                        resu = Double.parseDouble(newValue) / lastValue;
+                        display.setText(resu+"");
+                        break;
+                }
             }
+            compteur++;
         }
     };
+
+
 
 }
